@@ -107,13 +107,15 @@ function Build-Assembly {
     $opt = Read-Host "Would you like to clean it before? Y/n"
     if ($opt -ne 'n') {
       log "Removing following items: '$($dir.Name -Join "' '")'" -Level Info -Date:$Date -BaseLevel:$Level
-      foreach ($d in $dir) {
-        Remove-Item $d.Name 
+      
+      foreach ($d in $dir.FullName) {
+        Remove-Item $d
       }
     }
   }
   log "Assembling $Path" -Date:$Date -BaseLevel:$Level
-  $asmCmd = "nasm -f win64 $Path -o `"$buildDir/$obj`" -l `"$buildDir/$baseName.lst`"$($AssemblerFlags -join ' ')" 
+  $AssemblerFlags += "-f win64 $Path -o `"$buildDir/$obj`" -l `"$buildDir/$baseName.lst`""
+  $asmCmd = "nasm $($AssemblerFlags -join ' ')" 
   log "$asmCmd" -Level Running -Date:$Date -BaseLevel:$Level
   Invoke-Expression $asmCmd
   if ($? -eq $false){
@@ -123,7 +125,8 @@ function Build-Assembly {
   log "File $Path was Assembled" -Level Success -Date:$Date -BaseLevel:$Level
 
   log "Linking $obj" -Date:$Date -BaseLevel:$Level
-  $linkCmd = "link `"$buildDir/$obj`" /subsystem:console /entry:main /out:`"$buildDir/$exe`" $($LinkerFlags -join ' ') kernel32.lib legacy_stdio_definitions.lib msvcrt.lib"
+  $LinkerFlags += "/defaultlib:ucrt.lib /defaultlib:msvcrt.lib /defaultlib:kernel32.lib /defaultlib:legacy_stdio_definitions.lib"
+  $linkCmd = "link `"$buildDir/$obj`" /subsystem:console /entry:main /out:`"$buildDir/$exe`" $($LinkerFlags -join ' ')"
   log "$linkCmd" -Level Running -Date:$Date -BaseLevel:$Level
   Invoke-Expression $linkCmd
   if ($? -eq $false){
