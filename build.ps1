@@ -115,22 +115,28 @@ function Build-Assembly {
   }
   log "Assembling $Path" -Date:$Date -BaseLevel:$Level
   $AssemblerFlags += "-f win64 $Path -o `"$buildDir/$obj`" -l `"$buildDir/$baseName.lst`""
+  if ($Level -eq [logLevel]::Debug) {
+    $AssemblerFlags += "-gcv8"
+  }
   $asmCmd = "nasm $($AssemblerFlags -join ' ')" 
   log "$asmCmd" -Level Running -Date:$Date -BaseLevel:$Level
   Invoke-Expression $asmCmd
-  if ($? -eq $false){
-    log "There was an error when assembling $Path" -Level Error -Date:$Date -BaseLevel:$Level
+  if ($LASTEXITCODE -gt 0){
+    log "There was an error when assembling $Path, Status Code -> [$LASTEXITCODE]" -Level Error -Date:$Date -BaseLevel:$Level
     return
   }
   log "File $Path was Assembled" -Level Success -Date:$Date -BaseLevel:$Level
 
   log "Linking $obj" -Date:$Date -BaseLevel:$Level
   $LinkerFlags += "/defaultlib:ucrt.lib /defaultlib:msvcrt.lib /defaultlib:kernel32.lib /defaultlib:legacy_stdio_definitions.lib"
+  if ($Level -eq [logLevel]::Debug) {
+    $LinkerFlags += "/opt:noref /debug /pdb:`"$buildDir/$baseName.pdb`""
+  }
   $linkCmd = "link `"$buildDir/$obj`" /subsystem:console /entry:main /out:`"$buildDir/$exe`" $($LinkerFlags -join ' ')"
   log "$linkCmd" -Level Running -Date:$Date -BaseLevel:$Level
   Invoke-Expression $linkCmd
-  if ($? -eq $false){
-    log "There was an error when linking $obj" -Level Error -Date:$Date -BaseLevel:$Level
+  if ($LASTEXITCODE -gt 0){
+    log "There was an error when linking $obj, Status Code -> [$LASTEXITCODE]" -Level Error -Date:$Date -BaseLevel:$Level
     return
   }
   log "File $Path was Assembled" -Level Success -Date:$Date -BaseLevel:$Level
