@@ -136,10 +136,10 @@ function Build-Assembly {
   log "$linkCmd" -Level Running -Date:$Date -BaseLevel:$Level
   Invoke-Expression $linkCmd
   if ($LASTEXITCODE -gt 0){
-    log "There was an error when linking $obj, Status Code -> [$LASTEXITCODE]" -Level Error -Date:$Date -BaseLevel:$Level
+    log "There was an error when linking `"$buildDir/$obj`", Status Code -> [$LASTEXITCODE]" -Level Error -Date:$Date -BaseLevel:$Level
     return
   }
-  log "File $Path was Assembled" -Level Success -Date:$Date -BaseLevel:$Level
+  log "File `"$buildDir/$exe`" was linked." -Level Success -Date:$Date -BaseLevel:$Level
 }
 
 
